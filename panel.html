@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kiraz Elektronik Panel</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #dbeafe, #ffffff);
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input, button, textarea {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #4338ca;
+    }
+
+    .job-card {
+      background: #f3f4f6;
+      padding: 1rem;
+      border-left: 5px solid #4f46e5;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+    }
+
+    .delete-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 0.4rem 1rem;
+      border-radius: 4px;
+    }
+
+    .animated {
+      font-weight: bold;
+      font-size: 1.5rem;
+      text-align: center;
+      margin: 1rem 0;
+      animation: colorChange 4s infinite;
+    }
+
+    @keyframes colorChange {
+      0% { color: red; }
+      25% { color: orange; }
+      50% { color: green; }
+      75% { color: blue; }
+      100% { color: purple; }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 1rem;
+        padding: 1rem;
+      }
+    }
+
+    .logout-btn {
+      background: #6b7280;
+      color: white;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- GİRİŞ PANELİ -->
+  <div id="login-container" class="container">
+    <h2>Kiraz Elektronik Giriş</h2>
+    <input type="text" id="username" placeholder="Kullanıcı Adı" />
+    <input type="password" id="password" placeholder="Şifre" />
+    <button onclick="login()">Giriş Yap</button>
+    <p id="login-message" style="color: red;"></p>
+  </div>
+
+  <!-- PANEL -->
+  <div id="panel-container" class="container" style="display: none;">
+    <div class="animated">İş Takip Paneli</div>
+    <p id="clock"></p>
+
+    <form id="job-form">
+      <input type="text" id="title" placeholder="İş Başlığı" required />
+      <textarea id="description" placeholder="Açıklama" required></textarea>
+      <input type="date" id="date" required />
+      <button type="submit">İşi Kaydet</button>
+    </form>
+
+    <div id="job-list"></div>
+
+    <div class="animated">Kiraz Elektronik</div>
+
+    <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
+  </div>
+
+  <script>
+    const correctUser = "admin";
+    const correctPass = "1234";
+
+    function login() {
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+
+      if (user === correctUser && pass === correctPass) {
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("panel-container").style.display = "block";
+        loadJobs();
+        updateClock();
+      } else {
+        document.getElementById("login-message").textContent = "Hatalı kullanıcı adı veya şifre.";
+      }
+    }
+
+    function logout() {
+      document.getElementById("login-container").style.display = "block";
+      document.getElementById("panel-container").style.display = "none";
+    }
+
+    const form = document.getElementById("job-form");
+    const jobList = document.getElementById("job-list");
+    let jobs = [];
+
+    function saveJobs() {
+      localStorage.setItem("kirazJobs", JSON.stringify(jobs));
+    }
+
+    function loadJobs() {
+      const stored = localStorage.getItem("kirazJobs");
+      if (stored) {
+        jobs = JSON.parse(stored);
+        renderJobs();
+      }
+    }
+
+    function renderJobs() {
+      jobList.innerHTML = "";
+      jobs.forEach(job => {
+        const div = document.createElement("div");
+        div.className = "job-card";
+        div.innerHTML = `
+          <h3>${job.title}</h3>
+          <p>${job.description}</p>
+          <p><small>${job.date}</small></p>
+          <button class="delete-btn" onclick="deleteJob(${job.id})">Sil</button>
+        `;
+        jobList.appendChild(div);
+      });
+    }
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const title = document.getElementById("title").value.trim();
+      const desc = document.getElementById("description").value.trim();
+      const date = document.getElementById("date").value;
+
+      if (!title || !desc || !date) return;
+
+      const job = { id: Date.now(), title, description: desc, date };
+      jobs.push(job);
+      saveJobs();
+      renderJobs();
+      form.reset();
+    });
+
+    function deleteJob(id) {
+      jobs = jobs.filter(job => job.id !== id);
+      saveJobs();
+      renderJobs();
+    }
+
+    function updateClock() {
+      setInterval(() => {
+        const now = new Date();
+        const time = now.toLocaleString("tr-TR");
+        document.getElementById("clock").textContent = time;
+      }, 1000);
+    }
+  </script>
+
+</body>
+</html>
